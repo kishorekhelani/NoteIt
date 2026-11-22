@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Note It</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#4f46e5;--primary-d:#4338ca;--accent:#06b6d4;--bg:#f5f6fb;--text:#1e1b4b;--muted:#6b7280;
+  --border:#e5e7eb;--error:#dc2626;--ok:#16a34a;--card:#fff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Poppins',system-ui,sans-serif;color:var(--text);background:var(--bg);min-height:100vh}
+button{font-family:inherit;cursor:pointer}
+input,select{font:inherit;color:var(--text)}
+.hidden{display:none!important}
+.brand{font-family:'Caveat',cursive;font-size:2.2rem;color:var(--primary);line-height:1}
+
+/* ---------- AUTH ---------- */
+.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  background:linear-gradient(135deg,#eef2ff,#ecfeff)}
+.auth-card{background:#fff;width:100%;max-width:400px;border-radius:20px;padding:36px 32px;
+  box-shadow:0 20px 50px rgba(79,70,229,.15)}
+.auth-card .brand{text-align:center;margin-bottom:6px}
+.auth-card h1{font-size:1.25rem;text-align:center;margin-bottom:4px}
+.auth-card .sub{color:var(--muted);font-size:.88rem;text-align:center;margin-bottom:22px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.85rem;font-weight:500;margin-bottom:6px}
+.inp{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:.93rem;background:#fff}
+.inp:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,.15)}
+.pw-wrap{position:relative}
+.pw-wrap button{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:none;
+  color:var(--muted);font-size:.78rem;font-weight:600}
+.err{color:var(--error);font-size:.78rem;margin-top:4px;min-height:1em}
+.btn{padding:11px 18px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:600;font-size:.93rem;transition:.15s}
+.btn:hover{background:var(--primary-d)}
+.btn.block{width:100%}
+.btn.ghost{background:#eef0f5;color:var(--text)}
+.btn.ghost:hover{background:#e2e5ee}
+.btn.danger{background:#fee2e2;color:var(--error)}
+.btn.danger:hover{background:#fecaca}
+.links{display:flex;flex-direction:column;align-items:flex-start;gap:6px;margin:4px 0 18px}
+.link{background:none;border:none;color:var(--primary);font-weight:500;font-size:.87rem;padding:0}
+.msg{padding:10px 13px;border-radius:10px;font-size:.86rem;margin-bottom:14px}
+.msg.error{background:#fef2f2;color:var(--error);border:1px solid #fecaca}
+.msg.success{background:#f0fdf4;color:var(--ok);border:1px solid #bbf7d0}
+.center{text-align:center;margin-top:16px;font-size:.87rem;color:var(--muted)}
+
+/* ---------- WORKSPACE ---------- */
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:12px 28px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:5}
+.user{display:flex;align-items:center;gap:10px;font-size:.9rem}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:600;font-size:.85rem;flex-shrink:0}
+.ws{max-width:1150px;margin:0 auto;padding:28px}
+.ws-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;gap:12px;flex-wrap:wrap}
+.ws-head h2{font-size:1.7rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:18px}
+.note{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;cursor:pointer;
+  display:flex;flex-direction:column;transition:.15s;min-height:210px}
+.note:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(30,27,75,.1)}
+.note h3{font-size:1.05rem;margin-bottom:8px;word-break:break-word}
+.prog{height:7px;background:#eef0f5;border-radius:5px;overflow:hidden}
+.prog div{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));transition:.3s}
+.prog-l{font-size:.75rem;color:var(--muted);margin:5px 0 10px}
+.mini{list-style:none;font-size:.85rem;flex:1}
+.mini li{display:flex;align-items:center;gap:8px;padding:3px 0;overflow:hidden}
+.mini li span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini li.done span{text-decoration:line-through;color:var(--muted)}
+.box{width:15px;height:15px;border:1.5px solid #9ca3af;border-radius:4px;flex-shrink:0;display:grid;place-items:center;font-size:.65rem;color:#fff}
+.done .box{background:var(--ok);border-color:var(--ok)}
+.more{font-size:.78rem;color:var(--muted)}
+.note-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #f1f2f6}
+.stack{display:flex}
+.stack .av{width:26px;height:26px;font-size:.7rem;border:2px solid #fff;margin-left:-7px}
+.stack .av:first-child{margin-left:0}
+.del{background:none;border:none;color:var(--error);font-size:.8rem;font-weight:500}
+.tag{font-size:.72rem;background:#eef2ff;color:var(--primary);padding:2px 8px;border-radius:10px;font-weight:500}
+.empty{text-align:center;padding:70px 20px;color:var(--muted)}
+.empty .brand{font-size:2.8rem;margin-bottom:8px}
+
+/* ---------- NOTE DETAIL ---------- */
+.ov{position:fixed;inset:0;background:rgba(15,15,40,.45);display:flex;align-items:flex-start;justify-content:center;
+  padding:40px 16px;overflow-y:auto;z-index:10}
+.panel{background:#fff;border-radius:18px;width:100%;max-width:640px;padding:26px}
+.p-head{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.title-inp{flex:1;font-size:1.35rem;font-weight:600;border:1.5px solid transparent;border-radius:8px;padding:5px 8px}
+.title-inp:hover{border-color:var(--border)}
+.title-inp:focus{outline:none;border-color:var(--primary)}
+.title-inp:disabled{background:none}
+.x{background:none;border:none;font-size:1.5rem;color:var(--muted);line-height:1;padding:4px 8px}
+.people{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+.chip{display:flex;align-items:center;gap:6px;background:#f3f4f6;border-radius:20px;padding:3px 10px 3px 3px;font-size:.82rem}
+.chip .av{width:24px;height:24px;font-size:.68rem}
+.chip button{border:none;background:none;color:var(--muted);font-size:.9rem;padding:0 0 0 2px}
+.addp{display:flex;gap:8px;margin-bottom:16px}
+.addp .inp{flex:1}
+.srch{position:relative;flex:1}
+.sugg{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 12px 30px rgba(30,27,75,.15);z-index:20;max-height:260px;overflow-y:auto;padding:4px}
+.sg{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:.9rem}
+.sg .av{width:28px;height:28px;font-size:.75rem}
+.sg span:nth-child(2){flex:1}
+.sg b{color:var(--primary)}
+.sg-add{font-size:.75rem;color:var(--primary);font-weight:600;opacity:0}
+.sg.hi,.sg:hover{background:#eef2ff}.sg.hi .sg-add,.sg:hover .sg-add{opacity:1}
+.sg-none{padding:10px;font-size:.85rem;color:var(--muted)}
+.pct{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.pct .prog{flex:1;height:10px}
+.pct b{font-size:1.1rem;color:var(--primary);min-width:48px;text-align:right}
+.pct-sub{font-size:.78rem;color:var(--muted);margin-bottom:16px}
+.filter{display:flex;gap:6px;background:#f3f4f6;padding:4px;border-radius:10px;margin-bottom:12px;width:fit-content}
+.filter button{border:none;background:none;padding:7px 14px;border-radius:7px;font-size:.84rem;font-weight:500;color:var(--muted)}
+.filter button.on{background:#fff;color:var(--primary);box-shadow:0 1px 5px rgba(0,0,0,.08)}
+.tasks{list-style:none;margin-bottom:14px}
+.task{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid #f1f2f6}
+.task input[type=checkbox]{width:18px;height:18px;accent-color:var(--ok);flex-shrink:0;cursor:pointer}
+.task .txt{flex:1;font-size:.92rem;word-break:break-word}
+.task.done .txt{text-decoration:line-through;color:var(--muted)}
+.task .who{font-size:.75rem;color:var(--muted)}
+.task select{font-size:.78rem;padding:4px 6px;border:1px solid var(--border);border-radius:7px;max-width:130px;background:#fff}
+.task .rm{background:none;border:none;color:#c0c4cf;font-size:1.05rem;padding:2px 4px}
+.task .rm:hover{color:var(--error)}
+.lock{font-size:.72rem;color:#7c3aed;background:#f5f3ff;padding:1px 7px;border-radius:9px;margin-left:6px;white-space:nowrap}
+.add-task{display:flex;gap:8px;flex-wrap:wrap}
+.add-task .inp{flex:1;min-width:180px}
+.add-task select{padding:10px;border:1.5px solid var(--border);border-radius:10px;background:#fff}
+.p-foot{display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:14px;border-top:1px solid var(--border);font-size:.78rem;color:var(--muted)}
+.no-tasks{color:var(--muted);font-size:.88rem;padding:14px 4px}
+
+.dialog{background:#fff;border-radius:16px;padding:24px;max-width:380px;width:100%;margin-top:12vh}
+.dialog h3{margin-bottom:6px}.dialog p{color:var(--muted);font-size:.88rem;margin-bottom:16px}
+.dialog .acts{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:10px 18px;
+  border-radius:10px;font-size:.87rem;z-index:30;transition:opacity .3s}
+/* ---------- VIEW SWITCH + CALENDAR ---------- */
+.vswitch{display:flex;gap:4px;background:#e9ebf3;padding:4px;border-radius:11px}
+.vswitch button{border:none;background:none;padding:8px 16px;border-radius:8px;font-weight:500;font-size:.88rem;color:var(--muted)}
+.vswitch button.on{background:#fff;color:var(--primary);box-shadow:0 1px 5px rgba(0,0,0,.08)}
+.head-r{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cal-wrap{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:start}
+.cal{background:#fff;border:1px solid var(--border);border-radius:16px;padding:16px}
+.cal-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+.cal-top h3{font-size:1.15rem;min-width:170px}
+.cal-nav{display:flex;gap:6px;align-items:center}
+.cal-nav button{border:1px solid var(--border);background:#fff;border-radius:8px;padding:6px 11px;font-size:.85rem}
+.cal-nav button:hover{background:#f3f4f6}
+.dows,.days{display:grid;grid-template-columns:repeat(7,1fr)}
+.dows div{font-size:.75rem;font-weight:600;color:var(--muted);text-align:center;padding:6px 0}
+.day{min-height:92px;border:1px solid #f1f2f6;margin:-1px 0 0 -1px;padding:5px;cursor:pointer;overflow:hidden;transition:background .15s}
+.day:hover{background:#f8f9ff}
+.day.out{background:#fafafa}.day.out .dn{color:#c4c7d0}
+.day.sel{background:#eef2ff;outline:2px solid var(--primary);outline-offset:-2px;position:relative;z-index:1}
+.dn{font-size:.8rem;font-weight:600;margin-bottom:3px;width:24px;height:24px;display:grid;place-items:center;border-radius:50%}
+.day.today .dn{background:var(--primary);color:#fff}
+.pill{font-size:.7rem;padding:2px 6px;border-radius:5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+.pill.done{opacity:.45;text-decoration:line-through}
+.pmore{font-size:.68rem;color:var(--muted);padding-left:3px}
+.agenda{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;position:sticky;top:76px}
+.agenda h4{font-size:1rem;margin-bottom:2px}
+.agenda .sub{font-size:.8rem;color:var(--muted);margin-bottom:12px}
+.ag-item{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-bottom:1px solid #f1f2f6}
+.ag-item input{width:17px;height:17px;margin-top:2px;accent-color:var(--ok);cursor:pointer;flex-shrink:0}
+.ag-item .t{font-size:.88rem;word-break:break-word}
+.ag-item.done .t{text-decoration:line-through;color:var(--muted)}
+.ag-item .m{font-size:.73rem;color:var(--muted);margin-top:2px}
+.ag-item .m a{color:var(--primary);cursor:pointer;text-decoration:none;font-weight:500}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}
+.ag-add{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.ag-add .inp,.ag-add select{padding:9px 11px;font-size:.86rem}
+.ag-add select{border:1.5px solid var(--border);border-radius:10px;background:#fff}
+.due{font-size:.72rem;padding:1px 7px;border-radius:9px;background:#f3f4f6;color:var(--muted);margin-left:6px;white-space:nowrap}
+.due.over{background:#fee2e2;color:var(--error)}
+.due.soon{background:#fef3c7;color:#b45309}
+.task input[type=date],.add-task input[type=date]{font-size:.78rem;padding:4px 6px;border:1px solid var(--border);border-radius:7px;background:#fff}
+.add-task input[type=date]{padding:9px;border-width:1.5px;border-radius:10px;font-size:.85rem}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:.75rem;color:var(--muted)}
+@media(max-width:900px){.cal-wrap{grid-template-columns:1fr}.agenda{position:static}}
+@media(max-width:600px){.day{min-height:62px;padding:3px}.pill{font-size:0;height:6px;padding:0;border-radius:3px}.pmore{font-size:.6rem}}
+@media(max-width:600px){.ws{padding:18px}.topbar{padding:10px 16px}.panel{padding:20px}.task{flex-wrap:wrap}.task select{max-width:none}}
+/* ---------- ADMIN + MISC ---------- */
+.top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.top-actions .btn{padding:7px 12px;font-size:.82rem}
+.adm{background:#fff;border:1px solid var(--border);border-radius:16px;padding:18px;overflow-x:auto}
+.adm-bar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.adm-bar .inp{max-width:280px}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.03em;padding:8px 10px;border-bottom:2px solid var(--border)}
+td{padding:10px;border-bottom:1px solid #f1f2f6;vertical-align:middle}
+td .uc{display:flex;align-items:center;gap:10px}
+.st{font-size:.75rem;padding:2px 9px;border-radius:10px;font-weight:600}
+.st.on{background:#dcfce7;color:var(--ok)}.st.off{background:#f3f4f6;color:var(--muted)}
+.st.admin{background:#ede9fe;color:#6d28d9}
+.tbtn{border:1px solid var(--border);background:#fff;border-radius:7px;padding:5px 10px;font-size:.78rem;margin-right:4px}
+.tbtn:hover{background:#f3f4f6}.tbtn.red{color:var(--error)}
+.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:10px;padding:10px 13px;font-size:.82rem;margin-bottom:14px;line-height:1.5}
+.dialog .field{margin-bottom:12px}
+.chk{display:flex;align-items:center;gap:8px;font-size:.88rem}
+.chk input{width:16px;height:16px}
+.loading{position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:50;animation:ld 1s infinite;transform-origin:left}
+@keyframes ld{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+.note-hint{font-size:.82rem;color:var(--muted);text-align:center;margin-top:16px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="loading hidden" id="busy"></div>
+
+<!-- ===== LOGIN ===== -->
+<section class="auth" id="loginView">
+  <form class="auth-card" id="loginForm" novalidate>
+    <div class="brand">Note It</div>
+    <h1>Welcome back</h1>
+    <p class="sub">Log in to your workspace</p>
+    <div id="loginMsg"></div>
+    <div class="field"><label for="lUser">User ID</label><input class="inp" id="lUser" autocomplete="username"><div class="err" id="lUserErr"></div></div>
+    <div class="field"><label for="lPw">Password</label>
+      <div class="pw-wrap"><input class="inp" id="lPw" type="password" autocomplete="current-password"><button type="button" data-pw="lPw">Show</button></div>
+      <div class="err" id="lPwErr"></div></div>
+    <div class="links" style="flex-direction:row;justify-content:space-between">
+      <label class="chk"><input type="checkbox" id="remember"> Remember me</label>
+      <button type="button" class="link" id="toForgot">Forgot password?</button>
+    </div>
+    <button class="btn block" id="loginBtn">Log in</button>
+    <p class="note-hint">Don't have a User ID? Ask your admin to create one for you.</p>
+  </form>
+</section>
+
+<!-- ===== WORKSPACE ===== -->
+<section class="hidden" id="appView">
+  <header class="topbar">
+    <div class="brand" style="font-size:1.9rem">Note It</div>
+    <div class="top-actions">
+      <button class="btn ghost hidden" id="adminBtn">👥 Users</button>
+      <button class="btn ghost" id="pwBtn">🔑 Password</button>
+      <div class="user"><div class="av" id="meAv"></div><span id="meName"></span></div>
+      <button class="btn ghost" id="logout">Log out</button>
+    </div>
+  </header>
+  <main class="ws">
+    <div class="ws-head"><h2 id="wsTitle">Your workspace</h2>
+      <div class="head-r" id="wsTools"><div class="vswitch"><button data-v="notes" class="on">📝 Notes</button><button data-v="cal">📅 Calendar</button></div>
+      <button class="btn" id="newNote">+ New note</button></div>
+      <div class="head-r hidden" id="admTools"><button class="btn ghost" id="backWs">← Back to workspace</button><button class="btn" id="newUser">+ New user</button></div></div>
+    <div class="grid" id="grid"></div>
+    <div class="cal-wrap hidden" id="calView"></div>
+    <div class="hidden" id="adminView"></div>
+  </main>
+</section>
+
+<div id="overlay"></div>
+
+<script>
+/* ================= SERVER API ================= */
+const mem={};
+const S={get(k){try{return localStorage.getItem(k)}catch(e){return mem[k]??null}},
+         set(k,v){try{localStorage.setItem(k,v)}catch(e){mem[k]=v}},
+         del(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}}};
+const SS={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{sessionStorage.setItem(k,v)}catch(e){}},del(k){try{sessionStorage.removeItem(k)}catch(e){}}};
+let token=S.get('ni_token')||SS.get('ni_token');
+let busyN=0;
+async function api(action,body){
+  busyN++;$('busy').classList.remove('hidden');
+  try{
+    let r;
+    try{ r=await fetch('api.ashx?action='+action,{method:'POST',headers:{'Content-Type':'application/json','X-Auth-Token':token||''},body:JSON.stringify(body||{})}) }
+    catch(e){ throw new Error('Cannot reach the server. Is the IIS site running?') }
+    let j=null; try{ j=await r.json() }catch(e){}
+    if(!j) throw new Error('Server error ('+r.status+'). Check that ASP.NET 4.x is enabled in IIS (see SETUP.txt).');
+    if(r.status===401&&action!=='login'){ forceLogout('Your session ended — please log in again.'); throw new Error(j.error) }
+    if(!r.ok||j.error) throw new Error(j.error||('Error '+r.status));
+    return j;
+  } finally { if(--busyN<=0){busyN=0;$('busy').classList.add('hidden')} }
+}
+
+/* ================= STATE ================= */
+let me=null, isAdmin=false, DB={notes:[],tasks:[]}, DIR=[], openId=null, filter='all';
+const notes=()=>DB.notes.map(n=>Object.assign({},n,{tasks:DB.tasks.filter(t=>t.noteId===n.id)}));
+const users=()=>DIR.map(u=>({username:u.id,name:u.name}));
+const nameOf=id=>{const u=DIR.find(x=>x.id.toLowerCase()===String(id).toLowerCase());return u&&u.name&&u.name!==u.id?u.name:id};
+const same=(a,b)=>String(a||'').toLowerCase()===String(b||'').toLowerCase();
+async function refresh(){const [d,dir]=await Promise.all([api('data'),api('directory')]);DB=d;DIR=dir}
+async function act(action,body,okMsg){
+  try{ const r=await api(action,body); await refresh(); render(); if(okMsg)toast(okMsg); return r }
+  catch(e){ toast('⚠ '+e.message,4000); try{await refresh();render()}catch(_){} return null }
+}
+
+/* ================= HELPERS ================= */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const COLORS=['#4f46e5','#0891b2','#db2777','#ea580c','#16a34a','#7c3aed','#ca8a04','#0d9488'];
+const color=n=>{let h=0;for(const c of String(n).toLowerCase())h=(h*31+c.charCodeAt(0))>>>0;return COLORS[h%COLORS.length]};
+const av=(n,extra='')=>`<div class="av" style="background:${color(n)}" title="${esc(nameOf(n))}" ${extra}>${esc(String(nameOf(n))[0].toUpperCase())}</div>`;
+function err(id,t){$(id+'Err').textContent=t||''}
+function clearErrs(f){f.querySelectorAll('.err').forEach(e=>e.textContent='')}
+function toast(t,ms){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);
+  setTimeout(()=>{d.style.opacity=0;setTimeout(()=>d.remove(),300)},ms||1800)}
+document.querySelectorAll('[data-pw]').forEach(b=>b.onclick=()=>{const i=$(b.dataset.pw);
+  i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'Show':'Hide'});
+function dialog(html){$('overlay').innerHTML=`<div class="ov" id="dlgBg"><div class="dialog">${html}</div></div>`;
+  $('dlgBg').onclick=e=>{if(e.target.id==='dlgBg')closeDialog()}}
+function closeDialog(){$('overlay').innerHTML='';if(openId)renderNote()}
+
+/* ================= AUTH ================= */
+$('toForgot').onclick=()=>dialog(`<h3>Forgot your password?</h3><p>Passwords are managed by your admin. Ask them to reset it for you from the Users page — they will give you a new password.</p>
+  <div class="acts"><button class="btn" id="dOk">OK</button></div>`)||($('dOk').onclick=closeDialog);
+
+$('loginForm').onsubmit=async e=>{e.preventDefault();clearErrs(e.target);$('loginMsg').innerHTML='';
+  const u=$('lUser').value.trim(),p=$('lPw').value;
+  if(!u){err('lUser','Enter your User ID');return} if(!p){err('lPw','Enter your password');return}
+  $('loginBtn').disabled=true;
+  try{
+    const r=await api('login',{userId:u,password:p,remember:$('remember').checked});
+    token=r.token; if($('remember').checked)S.set('ni_token',token); else SS.set('ni_token',token);
+    e.target.reset(); await enter(r.user);
+    if(r.mustChange)changePw(true);
+  }catch(x){$('loginMsg').innerHTML=`<div class="msg error">${esc(x.message)}</div>`}
+  finally{$('loginBtn').disabled=false}};
+
+async function enter(user){
+  me=user.id; isAdmin=user.role==='Admin';
+  $('meAv').outerHTML=`<div class="av" id="meAv" style="background:${color(me)}">${esc(user.name[0].toUpperCase())}</div>`;
+  $('meName').textContent=user.name+(user.name!==user.id?' ('+user.id+')':'');
+  $('adminBtn').classList.toggle('hidden',!isAdmin);
+  $('loginView').classList.add('hidden');$('appView').classList.remove('hidden');
+  view='notes';document.querySelectorAll('[data-v]').forEach(x=>x.classList.toggle('on',x.dataset.v==='notes'));
+  await refresh(); render();
+}
+function forceLogout(msg){token=null;S.del('ni_token');SS.del('ni_token');me=null;openId=null;$('overlay').innerHTML='';
+  $('appView').classList.add('hidden');$('loginView').classList.remove('hidden');
+  if(msg)$('loginMsg').innerHTML=`<div class="msg error">${esc(msg)}</div>`}
+$('logout').onclick=()=>{forceLogout();$('loginMsg').innerHTML=''};
+
+function changePw(forced){
+  dialog(`<h3>${forced?'Please change the default password':'Change password'}</h3>
+    <p>${forced?'You are using the default admin password. Choose a new one now.':'Enter your current password and a new one.'}</p>
+    <div class="field"><input class="inp" type="password" id="cpOld" placeholder="Current password"></div>
+    <div class="field"><input class="inp" type="password" id="cpNew" placeholder="New password (6+ characters)"></div>
+    <div class="field"><input class="inp" type="password" id="cpNew2" placeholder="Repeat new password"></div>
+    <div class="err" id="cpErr"></div>
+    <div class="acts"><button class="btn ghost" id="cpNo">${forced?'Later':'Cancel'}</button><button class="btn" id="cpYes">Save</button></div>`);
+  $('cpNo').onclick=closeDialog;
+  $('cpYes').onclick=async()=>{err('cp','');
+    if($('cpNew').value.length<6)return err('cp','New password must be at least 6 characters');
+    if($('cpNew').value!==$('cpNew2').value)return err('cp','New passwords do not match');
+    try{await api('changePassword',{oldPassword:$('cpOld').value,newPassword:$('cpNew').value});closeDialog();toast('Password changed')}
+    catch(e){err('cp',e.message)}};
+}
+$('pwBtn').onclick=()=>changePw(false);
+
+/* ================= VISIBILITY (server enforces; client mirrors) ================= */
+const canSeeNote=n=>same(n.owner,me)||n.members.some(m=>same(m,me));
+const visibleTasks=n=>n.tasks;
+const pct=list=>list.length?Math.round(list.filter(t=>t.done).length/list.length*100):0;
+
+/* ================= DATES ================= */
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const todayStr=()=>ymd(new Date());
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function niceDate(s){const [y,m,d]=s.split('-').map(Number);return `${d} ${MONTHS[m-1].slice(0,3)}${y!==new Date().getFullYear()?' '+y:''}`}
+function dueChip(t){if(!t.due)return '';const today=todayStr();
+  const diff=Math.round((new Date(t.due)-new Date(today))/864e5);
+  const cls=t.done?'':diff<0?'over':diff<=2?'soon':'';
+  const label=diff===0?'Today':diff===1?'Tomorrow':niceDate(t.due);
+  return `<span class="due ${cls}">📅 ${label}${cls==='over'?' · overdue':''}</span>`}
+const noteColor=n=>color(n.id);
+
+/* ================= VIEW SWITCH ================= */
+let view='notes', calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1), selDay=todayStr(), calFilter='all';
+document.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{view=b.dataset.v;
+  document.querySelectorAll('[data-v]').forEach(x=>x.classList.toggle('on',x===b));render()});
+$('adminBtn').onclick=()=>{view='admin';render();loadAdmin()};
+$('backWs').onclick=()=>{view='notes';document.querySelectorAll('[data-v]').forEach(x=>x.classList.toggle('on',x.dataset.v==='notes'));render()};
+
+/* ================= CALENDAR ================= */
+function calTasks(){const out=[];notes().forEach(n=>visibleTasks(n).forEach(t=>{
+    if(t.due&&(calFilter==='all'||same(t.assignee,me)))out.push({n,t})}));return out}
+function renderCal(){
+  const items=calTasks(), byDay={};items.forEach(i=>(byDay[i.t.due]=byDay[i.t.due]||[]).push(i));
+  const y=calMonth.getFullYear(),m=calMonth.getMonth(),start=new Date(y,m,1-((new Date(y,m,1).getDay()+6)%7));
+  const today=todayStr();let cells='';
+  for(let i=0;i<42;i++){const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),k=ymd(d),list=byDay[k]||[];
+    if(i===35&&d.getMonth()!==m)break;
+    cells+=`<div class="day ${d.getMonth()!==m?'out':''} ${k===today?'today':''} ${k===selDay?'sel':''}" data-day="${k}">
+      <div class="dn">${d.getDate()}</div>
+      ${list.slice(0,3).map(i=>`<div class="pill ${i.t.done?'done':''}" style="background:${noteColor(i.n)}" title="${esc(i.t.text)} — ${esc(i.n.title||'Untitled')}">${esc(i.t.text)}</div>`).join('')}
+      ${list.length>3?`<div class="pmore">+${list.length-3} more</div>`:''}</div>`}
+  const dayList=byDay[selDay]||[], myNotes=notes();
+  const usedNotes=[...new Map(items.map(i=>[i.n.id,i.n])).values()];
+  $('calView').innerHTML=`<div class="cal">
+    <div class="cal-top"><h3>${MONTHS[m]} ${y}</h3>
+      <div class="cal-nav"><button id="cPrev">‹</button><button id="cToday">Today</button><button id="cNext">›</button></div>
+      <div class="filter" style="margin:0"><button data-cf="mine" class="${calFilter==='mine'?'on':''}">Only your tasks</button><button data-cf="all" class="${calFilter==='all'?'on':''}">Everyone's tasks</button></div></div>
+    <div class="dows">${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<div>${d}</div>`).join('')}</div>
+    <div class="days">${cells}</div>
+    ${usedNotes.length?`<div class="legend">${usedNotes.map(n=>`<span><span class="dot" style="background:${noteColor(n)}"></span>${esc(n.title||'Untitled')}</span>`).join('')}</div>`:''}
+  </div>
+  <aside class="agenda">
+    <h4>${selDay===today?'Today':niceDate(selDay)}</h4>
+    <div class="sub">${new Date(selDay+'T00:00').toLocaleDateString(undefined,{weekday:'long'})} · ${dayList.length} task${dayList.length===1?'':'s'}</div>
+    ${dayList.length?dayList.map(({n,t})=>`<div class="ag-item ${t.done?'done':''}">
+      <input type="checkbox" data-ct="${t.id}" ${t.done?'checked':''}>
+      <div><div class="t">${esc(t.text)}${t.assignee?' <span class="lock">🔒</span>':''}</div>
+      <div class="m"><span class="dot" style="background:${noteColor(n)}"></span><a data-open="${n.id}">${esc(n.title||'Untitled')}</a>
+        · ${t.assignee?(same(t.assignee,me)?'you':esc(nameOf(t.assignee))):'unassigned'}</div></div></div>`).join('')
+      :'<div class="sub" style="padding:8px 0">Nothing due on this day.</div>'}
+    ${myNotes.length?`<form class="ag-add" id="calAdd">
+      <input class="inp" id="caText" placeholder="Add a task for this day…">
+      <select id="caNote">${myNotes.map(n=>`<option value="${n.id}">${esc(n.title||'Untitled')}</option>`).join('')}</select>
+      <select id="caWho"></select>
+      <button class="btn">Add task</button></form>`:'<div class="sub">Create a note first to add tasks.</div>'}
+  </aside>`;
+  $('cPrev').onclick=()=>{calMonth=new Date(y,m-1,1);renderCal()};
+  $('cNext').onclick=()=>{calMonth=new Date(y,m+1,1);renderCal()};
+  $('cToday').onclick=()=>{calMonth=new Date(new Date().getFullYear(),new Date().getMonth(),1);selDay=today;renderCal()};
+  document.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>{calFilter=b.dataset.cf;renderCal()});
+  document.querySelectorAll('[data-day]').forEach(c=>c.onclick=()=>{selDay=c.dataset.day;
+    const d=new Date(selDay+'T00:00');if(d.getMonth()!==m)calMonth=new Date(d.getFullYear(),d.getMonth(),1);renderCal()});
+  document.querySelectorAll('[data-ct]').forEach(c=>c.onchange=()=>act('updateTask',{id:c.dataset.ct,done:c.checked}));
+  document.querySelectorAll('[data-open]').forEach(a=>a.onclick=()=>openNote(a.dataset.open));
+  if($('calAdd')){
+    const fillWho=()=>{const n=notes().find(x=>x.id===$('caNote').value);
+      $('caWho').innerHTML='<option value="">Unassigned</option>'+[n.owner,...n.members].map(p=>`<option value="${esc(p)}">${same(p,me)?esc(nameOf(p))+' (you)':esc(nameOf(p))}</option>`).join('')};
+    $('caNote').onchange=fillWho;fillWho();
+    $('calAdd').onsubmit=e=>{e.preventDefault();const txt=$('caText').value.trim();if(!txt)return;
+      const n=notes().find(x=>x.id===$('caNote').value);
+      act('addTask',{noteId:n.id,text:txt,assignee:$('caWho').value,due:selDay},'Task added to "'+(n.title||'Untitled')+'"')};
+  }
+}
+
+/* ================= ADMIN: USERS ================= */
+let ADM=[], admQ='';
+async function loadAdmin(){try{ADM=await api('adminUsers');renderAdmin()}catch(e){toast('⚠ '+e.message,4000)}}
+function renderAdmin(){
+  const q=admQ.toLowerCase();
+  const list=ADM.filter(u=>!q||u.id.toLowerCase().includes(q)||u.name.toLowerCase().includes(q));
+  $('adminView').innerHTML=`<div class="info">👥 Only admins see this page. Users are saved in <b>App_Data\\Users.xlsx</b> — you can also edit that file in Excel
+    (type a plain password in the <b>Password</b> column to reset it; it is encrypted automatically the next time that user logs in).</div>
+    <div class="adm"><div class="adm-bar"><input class="inp" id="admSearch" placeholder="🔍 Search users…" value="${esc(admQ)}">
+      <span style="font-size:.82rem;color:var(--muted)">${ADM.length} user${ADM.length===1?'':'s'} · ${ADM.filter(u=>u.active).length} active</span></div>
+    <table><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Created</th><th>Notes</th><th></th></tr></thead><tbody>
+    ${list.map(u=>`<tr><td><div class="uc">${av(u.id)}<div><b>${esc(u.id)}</b><div style="font-size:.78rem;color:var(--muted)">${esc(u.name)}</div></div></div></td>
+      <td>${u.role==='Admin'?'<span class="st admin">Admin</span>':'User'}</td>
+      <td><span class="st ${u.active?'on':'off'}">${u.active?'Active':'Inactive'}</span></td>
+      <td style="color:var(--muted);font-size:.82rem">${esc(u.created)}</td><td>${u.notes}</td>
+      <td style="white-space:nowrap"><button class="tbtn" data-ed="${esc(u.id)}">Edit</button>${same(u.id,me)?'':`<button class="tbtn red" data-dl="${esc(u.id)}">Delete</button>`}</td></tr>`).join('')
+      ||'<tr><td colspan="6" style="color:var(--muted)">No users match.</td></tr>'}
+    </tbody></table></div>`;
+  $('admSearch').oninput=e=>{admQ=e.target.value;const p=e.target.selectionStart;renderAdmin();$('admSearch').focus();$('admSearch').setSelectionRange(p,p)};
+  document.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>userDialog(ADM.find(u=>u.id===b.dataset.ed)));
+  document.querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{const id=b.dataset.dl;
+    dialog(`<h3>Delete user "${esc(id)}"?</h3><p>They will be removed from every note they were added to. If they created notes, set them to Inactive instead.</p>
+      <div class="err" id="duErr"></div><div class="acts"><button class="btn ghost" id="dNo">Cancel</button><button class="btn danger" id="dYes">Delete</button></div>`);
+    $('dNo').onclick=closeDialog;
+    $('dYes').onclick=async()=>{try{await api('adminDeleteUser',{userId:id});closeDialog();toast('User deleted');await loadAdmin();refresh()}catch(e){err('du',e.message)}}});
+}
+function userDialog(u){
+  const isNew=!u;
+  dialog(`<h3>${isNew?'New user':'Edit user'}</h3><p>${isNew?'Create a User ID and give the person their password.':'Leave the password empty to keep the current one.'}</p>
+    <div class="field"><label>User ID</label><input class="inp" id="uId" value="${isNew?'':esc(u.id)}" ${isNew?'':'disabled'} placeholder="e.g. kishore"></div>
+    <div class="field"><label>Full name</label><input class="inp" id="uName" value="${isNew?'':esc(u.name)}" placeholder="e.g. Kishore Khelani"></div>
+    <div class="field"><label>${isNew?'Password':'New password (optional)'}</label><input class="inp" id="uPw" type="text" placeholder="6+ characters"></div>
+    <div class="field"><label>Role</label><select class="inp" id="uRole"><option ${!isNew&&u.role!=='Admin'?'selected':''}>User</option><option ${!isNew&&u.role==='Admin'?'selected':''}>Admin</option></select></div>
+    <div class="field"><label class="chk"><input type="checkbox" id="uAct" ${isNew||u.active?'checked':''}> Active (can log in)</label></div>
+    <div class="err" id="uErr"></div>
+    <div class="acts"><button class="btn ghost" id="uNo">Cancel</button><button class="btn" id="uYes">${isNew?'Create user':'Save'}</button></div>`);
+  $('uNo').onclick=closeDialog;
+  $('uYes').onclick=async()=>{err('u','');
+    try{await api('adminSaveUser',{isNew,userId:$('uId').value.trim(),name:$('uName').value.trim(),password:$('uPw').value,role:$('uRole').value,active:$('uAct').checked});
+      closeDialog();toast(isNew?'User created':'User saved');await loadAdmin();refresh()}
+    catch(e){err('u',e.message)}};
+  setTimeout(()=>$(isNew?'uId':'uName').focus(),30);
+}
+$('newUser').onclick=()=>userDialog(null);
+
+/* ================= WORKSPACE ================= */
+function render(){
+  if(!me)return;
+  const adm=view==='admin';
+  $('wsTitle').textContent=adm?'Users':'Your workspace';
+  $('wsTools').classList.toggle('hidden',adm);$('admTools').classList.toggle('hidden',!adm);
+  $('grid').classList.toggle('hidden',view!=='notes');$('calView').classList.toggle('hidden',view!=='cal');$('adminView').classList.toggle('hidden',!adm);
+  if(adm)return;
+  if(view==='cal'){renderCal();if(openId)renderNote();return}
+  const mine=notes().sort((a,b)=>String(b.updated).localeCompare(String(a.updated)));
+  if(!mine.length){$('grid').innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="brand">Nothing here yet</div>
+    Click <b>+ New note</b> to create your first note.</div>`;}
+  else $('grid').innerHTML=mine.map(n=>{
+    const vt=visibleTasks(n),p=pct(vt),people=[n.owner,...n.members];
+    return `<div class="note" data-id="${n.id}">
+      <h3>${esc(n.title||'Untitled')}</h3>
+      <div class="prog"><div style="width:${p}%"></div></div>
+      <div class="prog-l">${p}% done · ${vt.filter(t=>t.done).length}/${vt.length} tasks</div>
+      <ul class="mini">${vt.slice(0,4).map(t=>`<li class="${t.done?'done':''}"><div class="box">${t.done?'✓':''}</div><span>${esc(t.text)}</span></li>`).join('')}
+      ${vt.length>4?`<li class="more">+${vt.length-4} more</li>`:''}${!vt.length?'<li class="more">No tasks yet</li>':''}</ul>
+      <div class="note-foot"><div class="stack">${people.slice(0,5).map(x=>av(x)).join('')}</div>
+      ${same(n.owner,me)?`<button class="del" data-del="${n.id}">Delete note</button>`:`<span class="tag">Shared by ${esc(nameOf(n.owner))}</span>`}</div></div>`}).join('');
+  document.querySelectorAll('.note').forEach(c=>c.onclick=ev=>{if(ev.target.dataset.del)return;openNote(c.dataset.id)});
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>confirmDelete(b.dataset.del));
+  if(openId)renderNote();
+}
+$('newNote').onclick=async()=>{const n=await act('createNote',{title:''});if(n){filter='all';openNote(n.id);setTimeout(()=>$('nTitle')&&$('nTitle').focus(),50)}};
+
+function confirmDelete(id){const n=notes().find(x=>x.id===id);
+  dialog(`<h3>Delete note?</h3><p>"${esc(n.title||'Untitled')}" and all its tasks will be deleted for everyone. This can't be undone.</p>
+    <div class="acts"><button class="btn ghost" id="dNo">Cancel</button><button class="btn danger" id="dYes">Delete</button></div>`);
+  $('dNo').onclick=closeDialog;
+  $('dYes').onclick=async()=>{openId=null;$('overlay').innerHTML='';await act('deleteNote',{id},'Note deleted')}}
+
+/* ================= NOTE DETAIL ================= */
+let titleTimer=null;
+function openNote(id){openId=id;renderNote()}
+async function closeNote(){
+  const n=notes().find(x=>x.id===openId);
+  if(titleTimer){clearTimeout(titleTimer);titleTimer=null;if(n&&same(n.owner,me))await api('updateNote',{id:n.id,title:n.title}).catch(()=>{})}
+  openId=null;$('overlay').innerHTML='';
+  if(n&&same(n.owner,me)&&!n.title.trim()&&!n.tasks.length&&!n.members.length)await act('deleteNote',{id:n.id});
+  else { try{await refresh()}catch(e){} render() }
+}
+
+function renderNote(){
+  const n=notes().find(x=>x.id===openId);
+  if(!n){openId=null;$('overlay').innerHTML='';return}
+  const owner=same(n.owner,me), people=[n.owner,...n.members];
+  const vt=visibleTasks(n), p=pct(vt);
+  const shown=filter==='mine'?vt.filter(t=>same(t.assignee,me)):vt;
+  const opts=sel=>`<option value="">Unassigned</option>`+people.map(x=>`<option value="${esc(x)}" ${same(x,sel)?'selected':''}>${same(x,me)?esc(nameOf(x))+' (you)':esc(nameOf(x))}</option>`).join('');
+  const focused=document.activeElement&&document.activeElement.id;
+  const titleVal=$('nTitle')&&focused==='nTitle'?$('nTitle').value:n.title;
+  const taskVal=$('newTask')?$('newTask').value:'', pVal=$('addPerson')?$('addPerson').value:'', dueVal=$('newDue')?$('newDue').value:'';
+
+  $('overlay').innerHTML=`<div class="ov" id="ovBg"><div class="panel">
+    <div class="p-head"><input class="title-inp" id="nTitle" placeholder="Title" value="${esc(titleVal)}" ${owner?'':'disabled'}>
+      <button class="x" id="closeN" title="Close">×</button></div>
+    <div class="people">${people.map(x=>`<div class="chip">${av(x)}${esc(nameOf(x))}${same(x,n.owner)?' <span class="tag">creator</span>':''}
+      ${owner&&!same(x,n.owner)?`<button data-rmp="${esc(x)}" title="Remove">×</button>`:''}</div>`).join('')}</div>
+    ${owner?`<div class="addp"><div class="srch"><input class="inp" id="addPerson" placeholder="🔍 Search User ID or name to add…" value="${esc(pVal)}" autocomplete="off"><div class="sugg hidden" id="sugg"></div></div><button class="btn" id="addPBtn">+ Add people</button></div><div class="err" id="addPersonErr" style="margin:-10px 0 10px"></div>`:''}
+    <div class="pct"><div class="prog"><div style="width:${p}%"></div></div><b>${p}%</b></div>
+    <div class="pct-sub">${vt.filter(t=>t.done).length} of ${vt.length} tasks done</div>
+    <div class="filter"><button data-f="mine" class="${filter==='mine'?'on':''}">Only your tasks</button>
+      <button data-f="all" class="${filter==='all'?'on':''}">Everyone's tasks</button></div>
+    <ul class="tasks">${shown.length?shown.map(t=>`<li class="task ${t.done?'done':''}">
+      <input type="checkbox" data-t="${t.id}" ${t.done?'checked':''}>
+      <div class="txt">${esc(t.text)}${t.assignee?'<span class="lock" title="Only the assigned person and the creator can see this">🔒 private</span>':''}${dueChip(t)}
+        <div class="who">${t.assignee?'Assigned to '+(same(t.assignee,me)?'you':esc(nameOf(t.assignee))):'Not assigned'} · added by ${same(t.by,me)?'you':esc(nameOf(t.by))}</div></div>
+      ${(owner||same(t.by,me))?`<input type="date" data-d="${t.id}" value="${t.due||''}" title="Due date"><select data-a="${t.id}" title="Assign to">${opts(t.assignee)}</select><button class="rm" data-rm="${t.id}" title="Delete task">🗑</button>`:''}
+      </li>`).join(''):`<li class="no-tasks">${filter==='mine'?'No tasks assigned to you.':'No tasks yet — add one below.'}</li>`}</ul>
+    <form class="add-task" id="taskForm"><input class="inp" id="newTask" placeholder="Add a task…" value="${esc(taskVal)}">
+      <input type="date" id="newDue" title="Due date (optional)" value="${dueVal}">
+      <select id="newAssign" title="Assign to">${opts('')}</select><button class="btn">Add</button></form>
+    <div class="p-foot"><span>Note ${esc(n.id)} · created by ${owner?'you':esc(nameOf(n.owner))}</span>
+      ${owner?`<button class="btn danger" id="delN" style="padding:7px 12px;font-size:.82rem">Delete note</button>`:`<button class="btn ghost" id="leaveN" style="padding:7px 12px;font-size:.82rem">Leave note</button>`}</div>
+  </div></div>`;
+
+  if(focused&&$(focused)){const el=$(focused);el.focus();if(el.setSelectionRange&&el.value&&el.type!=='date')el.setSelectionRange(el.value.length,el.value.length)}
+  $('closeN').onclick=closeNote;
+  $('ovBg').onclick=e=>{if(e.target.id==='ovBg')closeNote()};
+  if(owner){
+    $('nTitle').oninput=e=>{const v=e.target.value;const dn=DB.notes.find(x=>x.id===n.id);if(dn)dn.title=v;
+      clearTimeout(titleTimer);titleTimer=setTimeout(()=>{titleTimer=null;api('updateNote',{id:n.id,title:v}).then(()=>{if(view==='notes'){const c=document.querySelector(`.note[data-id="${n.id}"] h3`);if(c)c.textContent=v||'Untitled'}}).catch(e=>toast('⚠ '+e.message,4000))},600)};
+    const addP=async()=>{const u=$('addPerson').value.trim();err('addPerson','');
+      if(!u)return; const found=DIR.find(x=>same(x.id,u));
+      if(!found){err('addPerson','No user with ID "'+u+'"');return}
+      if(people.some(x=>same(x,u))){err('addPerson','Already added');return}
+      $('addPerson').value='';await act('addMember',{noteId:n.id,userId:found.id},found.name+' added')};
+    let hi=0, matches=[];
+    const showSugg=()=>{const q=$('addPerson').value.trim().toLowerCase();
+      matches=DIR.filter(u=>!people.some(x=>same(x,u.id))&&(!q||u.id.toLowerCase().includes(q)||u.name.toLowerCase().includes(q)))
+        .sort((a,b)=>(b.id.toLowerCase().startsWith(q)-a.id.toLowerCase().startsWith(q))||a.id.localeCompare(b.id)).slice(0,8);
+      hi=Math.min(hi,Math.max(matches.length-1,0));
+      const box=$('sugg');box.classList.remove('hidden');
+      const hl=s=>{const at=q?s.toLowerCase().indexOf(q):-1;return at<0?esc(s):esc(s.slice(0,at))+'<b>'+esc(s.slice(at,at+q.length))+'</b>'+esc(s.slice(at+q.length))};
+      box.innerHTML=matches.length?matches.map((u,i)=>`<div class="sg ${i===hi?'hi':''}" data-u="${esc(u.id)}">${av(u.id)}<span>${hl(u.id)}${u.name!==u.id?` <small style="color:var(--muted)">· ${hl(u.name)}</small>`:''}</span><span class="sg-add">+ Add</span></div>`).join('')
+        :`<div class="sg-none">${q?'No user matching "'+esc(q)+'"':'Everyone is already on this note'}</div>`;
+      box.querySelectorAll('.sg').forEach(r=>r.onmousedown=ev=>{ev.preventDefault();$('addPerson').value=r.dataset.u;addP()})};
+    $('addPerson').oninput=()=>{hi=0;err('addPerson','');showSugg()};
+    $('addPerson').onfocus=showSugg;
+    $('addPerson').onblur=()=>setTimeout(()=>$('sugg')&&$('sugg').classList.add('hidden'),120);
+    $('addPBtn').onclick=()=>{if(matches[hi]&&!DIR.some(x=>same(x.id,$('addPerson').value.trim())))$('addPerson').value=matches[hi].id;addP()};
+    $('addPerson').onkeydown=e=>{
+      if(e.key==='ArrowDown'){e.preventDefault();hi=Math.min(hi+1,matches.length-1);showSugg()}
+      else if(e.key==='ArrowUp'){e.preventDefault();hi=Math.max(hi-1,0);showSugg()}
+      else if(e.key==='Escape'){e.stopPropagation();$('sugg').classList.add('hidden')}
+      else if(e.key==='Enter'){e.preventDefault();if(matches[hi])$('addPerson').value=matches[hi].id;addP()}};
+    document.querySelectorAll('[data-rmp]').forEach(b=>b.onclick=()=>act('removeMember',{noteId:n.id,userId:b.dataset.rmp}));
+    $('delN').onclick=()=>confirmDelete(n.id);
+  } else $('leaveN').onclick=async()=>{openId=null;$('overlay').innerHTML='';await act('leaveNote',{noteId:n.id},'You left the note')};
+
+  document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filter=b.dataset.f;renderNote()});
+  document.querySelectorAll('[data-t]').forEach(c=>c.onchange=()=>act('updateTask',{id:c.dataset.t,done:c.checked}));
+  document.querySelectorAll('[data-a]').forEach(s=>s.onchange=()=>act('updateTask',{id:s.dataset.a,assignee:s.value}));
+  document.querySelectorAll('[data-d]').forEach(d=>d.onchange=()=>act('updateTask',{id:d.dataset.d,due:d.value}));
+  document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>act('deleteTask',{id:b.dataset.rm}));
+  $('taskForm').onsubmit=async e=>{e.preventDefault();const t=$('newTask').value.trim();if(!t)return;
+    const a=$('newAssign').value,due=$('newDue').value;$('newTask').value='';$('newDue').value='';
+    await act('addTask',{noteId:n.id,text:t,assignee:a,due});setTimeout(()=>$('newTask')&&$('newTask').focus(),0)};
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&openId&&!document.querySelector('.dialog'))closeNote()});
+
+/* ================= AUTO-REFRESH (see other people's changes) ================= */
+setInterval(async()=>{
+  if(!me||view==='admin'||document.hidden||busyN)return;
+  const a=document.activeElement; if(a&&a!==document.body&&/INPUT|SELECT|TEXTAREA/.test(a.tagName))return;
+  if(document.querySelector('.dialog'))return;
+  try{await refresh();render()}catch(e){}
+},15000);
+
+/* ================= START ================= */
+(async function(){
+  if(!token)return;
+  try{const r=await api('me');await enter(r.user)}catch(e){}
+})();
+</script>
+</body>
+</html>
